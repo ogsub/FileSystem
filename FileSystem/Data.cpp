@@ -35,17 +35,14 @@ char* Data::getFName(int entry) {
 }
 
 char* Data::getFExtension(int entry) {
-	//std::unique_lock<std::mutex> lock(m);
 	return table[entry].extension;
 }
 
 int Data::getIndexClusterNo(int entry) {
-	//std::unique_lock<std::mutex> lock(m);
 	return table[entry].indexClusterNo;
 }
 
 int Data::getLastEntryNo() {
-	//std::unique_lock<std::mutex> lock(m);
 	for (int i = 0; i < 64; i++) {
 		if (isEntryEmpty(i))
 			return i - 1;
@@ -54,7 +51,6 @@ int Data::getLastEntryNo() {
 }
 
 int Data::getFileSize(int entry) {
-	//aaaaaaaaaaaaaaaaaaaastd::unique_lock<std::mutex> lock(m);
 	return table[entry].fileSize;
 }
 
@@ -65,7 +61,6 @@ bool Data::isEntryEmpty(int entry) {
 }
 
 void Data::setFullFileName(int entry, char* fullFileName) {
-	//std::unique_lock<std::mutex> lock(m);
 	if (strlen(fullFileName) > 12)
 		return;
 
@@ -94,17 +89,14 @@ void Data::setFullFileName(int entry, char* fullFileName) {
 }
 
 void Data::setIndexClusterNo(int entry, int indexClusterNo) {
-	//std::unique_lock<std::mutex> lock(m);
 	table[entry].indexClusterNo = indexClusterNo;
 }
 
 void Data::setFileSize(int entry, int fileSize) {
-	//aaaaaaaaaaaaaaaaaaaastd::unique_lock<std::mutex> lock(m);
 	table[entry].fileSize = fileSize;
 }
 
 int Data::findEntry(int indexClusterNo) {
-	//std::unique_lock<std::mutex> lock(m);
 	for (int i = 0; i < 64; i++) {
 		if (table[i].indexClusterNo == indexClusterNo)
 			return i;
