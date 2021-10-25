@@ -36,12 +36,7 @@ char Index::doesExist(char* fname, Partition* partition, FileFamilyTree* fft) {/
 						fft->file1LvlCluster = dirData.getIndexClusterNo(i);
 						fft->size = dirData.getFileSize(i);
 					}
-					/*if (clusterNo_ != nullptr) {
-						*clusterNo_ = clusterNo;
-						if (size_ != nullptr) {
-							*size_ = dirData.getFileSize(*clusterNo_);
-						}
-					}*/
+					
 					return 1;
 				}
 			} 
