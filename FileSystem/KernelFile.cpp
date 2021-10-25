@@ -14,7 +14,6 @@ KernelFile::KernelFile(int clusterNo, unsigned long size) {
 
 KernelFile::~KernelFile() {
 
-	//999999999999999999999999999999999999999999999
 	std::vector<KernelFS::ProcesFCB>::iterator it2;
 	this->isFileAvilable(fileToCloseAddr, &it2);
 
@@ -28,7 +27,6 @@ KernelFile::~KernelFile() {
 
 	delete fft;
 	delete dirData;
-	//999999999999999999999999999999999999999999999
 
 	//std::unique_lock<std::mutex> lock(this->m);
 	//if (KernelFS::getOpenedFilesNo() == 0 && KernelFS::unmountingInProgress)
@@ -48,7 +46,6 @@ KernelFile::~KernelFile() {
 		}
 
 		if (it->first == threadId && it2 != it->second->end()) {
-			//2222222222222222222222222222222222222222222222222222222222222222222222222222
 			if (it2->mode != 'r') {					//Zadnji data koji nije upisan kad se radio write
 				if (this->fileOpenedCache.clusterNoFile1Lvl != 0) {
 					KernelFS::partition->writeCluster(this->fileOpenedCache.clusterNoFile1Lvl, (char*)this->fileOpenedCache.file1Lvl);
@@ -60,7 +57,6 @@ KernelFile::~KernelFile() {
 					KernelFS::partition->writeCluster(this->fileOpenedCache.clusterNoFileData, (char*)this->fileOpenedCache.fileData);
 				}
 			}
-			//2222222222222222222222222222222222222222222222222222222222222222222222222222
 			it->second->erase(it2);
 		}
 	}
@@ -77,12 +73,10 @@ KernelFile::~KernelFile() {
 		}
 	}
 
-	//********************************************
 	if (KernelFS::getOpenedFilesNo() == 0) {
 		//mySignal(KernelFS::openedFilesSem);
 		KernelFS::cvAllFilesClosed.notify_all();
 	}
-	//********************************************
 }
  
 int KernelFile::isFileAvilable(File* addr, std::vector<KernelFS::ProcesFCB>::iterator* it2) {
@@ -101,36 +95,6 @@ int KernelFile::isFileAvilable(File* addr, std::vector<KernelFS::ProcesFCB>::ite
 	}
 	return 1;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 char KernelFile::write(BytesCnt bytesCnt, char * buffer, File* addr){
 	//if (this->eof(addr))
@@ -171,11 +135,6 @@ char KernelFile::write(BytesCnt bytesCnt, char * buffer, File* addr){
 	//this->size = this->size > 2048 ? 2048 : this->size;
 	//update size u odgovarajucem ulazu dir2Lvl clustera
 
-
-	//3333333333333333333Index dir1Lvl = Index();
-	//3333333333333333333KernelFS::partition->readCluster(1, (char*)& dir1Lvl);
-
-	//999999999999999999999999999999999
 	//FileFamilyTree* fft = new FileFamilyTree();
 	//KernelFS::dir1Lvl->doesExist(it2->name, KernelFS::partition, fft);
 	//Data* dirData = new Data();
@@ -186,7 +145,6 @@ char KernelFile::write(BytesCnt bytesCnt, char * buffer, File* addr){
 	
 	//delete fft;
 	//delete dirData;
-	//999999999999999999999999999999999
 
 	if (this->size > 39475) {
 		//std::cout << "asdadasdasd" << std::endl;
@@ -213,12 +171,10 @@ char KernelFile::write(BytesCnt bytesCnt, char * buffer, File* addr){
 
 	Index* file1Lvl = nullptr;
 	if (fileOpenedCache.clusterNoFile1Lvl != this->clusterNo) {
-		//2222222222222222222222222222222222222222222222222222222222222222222222222222
 		if (fileOpenedCache.clusterNoFile1Lvl != 0) {		//znaci da je nesto bilo upisivano u njemu
 			KernelFS::partition->writeCluster(fileOpenedCache.clusterNoFile1Lvl, (char*)fileOpenedCache.file1Lvl);
 			//delete fileOpenedCache.file1Lvl;
 		}
-		//2222222222222222222222222222222222222222222222222222222222222222222222222222
 		file1Lvl = new Index();
 		KernelFS::partition->readCluster(this->clusterNo, (char*)file1Lvl);
 		fileOpenedCache.clusterNoFile1Lvl = this->clusterNo;
@@ -234,12 +190,10 @@ char KernelFile::write(BytesCnt bytesCnt, char * buffer, File* addr){
 		unsigned long freeClusterNo = KernelFS::bitVectorPtr->getFirstFreeClusterNo(KernelFS::partition);//;)
 		file1Lvl->table[file1LvlEntry] = freeClusterNo;
 
-		//2222222222222222222222222222222222222222222222222222222222222222222222222222
 		if (fileOpenedCache.clusterNoFile2Lvl != 0) {		//znaci da je nesto bilo upisivano u njemu
 			KernelFS::partition->writeCluster(fileOpenedCache.clusterNoFile2Lvl, (char*)fileOpenedCache.file2Lvl);
 			//delete fileOpenedCache.file2Lvl;
 		}
-		//2222222222222222222222222222222222222222222222222222222222222222222222222222
 
 		file2Lvl = new Index();
 		KernelFS::partition->writeCluster(freeClusterNo, (char*) file2Lvl);	//ako je ovo novi cluster koga citamo, a ne neki sa postojecim podacima, moramo ga inicijalizovati sa svim nulama
@@ -251,12 +205,10 @@ char KernelFile::write(BytesCnt bytesCnt, char * buffer, File* addr){
 	}
 	else {	//znaci nije prazan ulaz i postoji file2Lvl za taj ulaz, i samo ga citamo
 		if (fileOpenedCache.clusterNoFile2Lvl != file1Lvl->table[file1LvlEntry]) {
-			//2222222222222222222222222222222222222222222222222222222222222222222222222222
 			if (fileOpenedCache.clusterNoFile2Lvl != 0) {		//znaci da je nesto bilo upisivano u njemu
 				KernelFS::partition->writeCluster(fileOpenedCache.clusterNoFile2Lvl, (char*)fileOpenedCache.file2Lvl);
 				//delete fileOpenedCache.file2Lvl;
 			}
-			//2222222222222222222222222222222222222222222222222222222222222222222222222222
 			
 			file2Lvl = new Index();
 
@@ -270,26 +222,17 @@ char KernelFile::write(BytesCnt bytesCnt, char * buffer, File* addr){
 		}
 	}
 
-	//if (file2Lvl->table[0] == 1684235363) {
-	//	std::cout << "ALO BRE" << std::endl;
-	//}
-
 	KernelFile::FileDataBlock* dataBlock = nullptr;
 
 	if (file2Lvl->table[file2LvlEntry] == 0) {	//znaci da je prazan taj ulaz i da ne postoji file2Lvl za taj ulaz, moramo da zauzmemo novi
 		writeFile2Lvl = true;
 		unsigned long freeClusterNo = KernelFS::bitVectorPtr->getFirstFreeClusterNo(KernelFS::partition);//;)
-		//if (freeClusterNo == 1684235363) {
-		//	std::cout << "ALO BRE" << std::endl;
-		//}
 		file2Lvl->table[file2LvlEntry] = freeClusterNo;
 
-		//2222222222222222222222222222222222222222222222222222222222222222222222222222
 		if (fileOpenedCache.clusterNoFileData != 0) {		//znaci da je nesto bilo upisivano u njemu
 			KernelFS::partition->writeCluster(fileOpenedCache.clusterNoFileData, (char*)fileOpenedCache.fileData);
 			//delete fileOpenedCache.fileData;
 		}
-		//2222222222222222222222222222222222222222222222222222222222222222222222222222
 
 		dataBlock = new KernelFile::FileDataBlock();
 		KernelFS::partition->writeCluster(freeClusterNo, (char*) dataBlock);	//**** mislim da za data i ne mora, jer sam gledao tu po size-u //ako je ovo novi cluster koga citamo, a ne neki sa postojecim podacima, moramo ga inicijalizovati sa svim nulama
@@ -300,12 +243,10 @@ char KernelFile::write(BytesCnt bytesCnt, char * buffer, File* addr){
 	}
 	else {
 		if (fileOpenedCache.clusterNoFileData != file2Lvl->table[file2LvlEntry]) {
-			//2222222222222222222222222222222222222222222222222222222222222222222222222222
 			if (fileOpenedCache.clusterNoFileData != 0) {		//znaci da je nesto bilo upisivano u njemu
 				KernelFS::partition->writeCluster(fileOpenedCache.clusterNoFileData, (char*)fileOpenedCache.fileData);
 				//delete fileOpenedCache.fileData;
 			}
-			//2222222222222222222222222222222222222222222222222222222222222222222222222222
 			
 			dataBlock = new KernelFile::FileDataBlock();
 
@@ -328,16 +269,6 @@ char KernelFile::write(BytesCnt bytesCnt, char * buffer, File* addr){
 		//	return 1;
 
 		if (bytesWritten == bytesToWrite) {
-			//~~~~~~~~~~KernelFS::partition->writeCluster(0, (char*) KernelFS::bitVectorPtr);
-
-			//2222222222222222222222222222222222222222222222222222222222222222222222222222
-			//if(writeFile1Lvl)
-			//	KernelFS::partition->writeCluster(this->clusterNo, (char*) file1Lvl);
-			//if(writeFile2Lvl)
-			//	KernelFS::partition->writeCluster(file1Lvl->table[file1LvlEntry], (char*) file2Lvl);
-			//KernelFS::partition->writeCluster(file2Lvl->table[file2LvlEntry], (char*) dataBlock);
-			//2222222222222222222222222222222222222222222222222222222222222222222222222222
-
 			delete[] bytesArray;
 			delete[] bufferWithRest;
 			return 1;
@@ -358,12 +289,10 @@ char KernelFile::write(BytesCnt bytesCnt, char * buffer, File* addr){
 					return 0;									//puna memorija, vracam neuspeh, upisao je sta je upisao
 				}
 				if (file1Lvl->table[file1LvlEntry] != 0) {
-					//2222222222222222222222222222222222222222222222222222222222222222222222222222
 					if (fileOpenedCache.clusterNoFile2Lvl != 0) {		//znaci da je nesto bilo upisivano u njemu
 						KernelFS::partition->writeCluster(fileOpenedCache.clusterNoFile2Lvl, (char*)fileOpenedCache.file2Lvl);
 						//delete fileOpenedCache.file2Lvl;
 					}
-					//2222222222222222222222222222222222222222222222222222222222222222222222222222
 					
 
 					KernelFS::partition->readCluster(file1Lvl->table[file1LvlEntry], (char*) file2Lvl);
@@ -372,12 +301,10 @@ char KernelFile::write(BytesCnt bytesCnt, char * buffer, File* addr){
 					fileOpenedCache.file2Lvl = file2Lvl;
 				}
 				else {
-					//2222222222222222222222222222222222222222222222222222222222222222222222222222
 					if (fileOpenedCache.clusterNoFile2Lvl != 0) {		//znaci da je nesto bilo upisivano u njemu
 						KernelFS::partition->writeCluster(fileOpenedCache.clusterNoFile2Lvl, (char*)fileOpenedCache.file2Lvl);
 						//delete fileOpenedCache.file2Lvl;
 					}
-					//2222222222222222222222222222222222222222222222222222222222222222222222222222
 
 
 					file1Lvl->table[file1LvlEntry] = KernelFS::bitVectorPtr->getFirstFreeClusterNo(KernelFS::partition);//;)
@@ -392,13 +319,10 @@ char KernelFile::write(BytesCnt bytesCnt, char * buffer, File* addr){
 			}
 
 			if (file2Lvl->table[file2LvlEntry] != 0) {								//u slucaju da se prelazi na novi file2LvlEntry ulaz koji je u indexu 2. nivoa = 0
-				
-				//2222222222222222222222222222222222222222222222222222222222222222222222222222
 				if (fileOpenedCache.clusterNoFileData != 0) {		//znaci da je nesto bilo upisivano u njemu
 					KernelFS::partition->writeCluster(fileOpenedCache.clusterNoFileData, (char*)fileOpenedCache.fileData);
 					//delete fileOpenedCache.fileData;
 				}
-				//2222222222222222222222222222222222222222222222222222222222222222222222222222
 
 
 				KernelFS::partition->readCluster(file2Lvl->table[file2LvlEntry], (char*) dataBlock);
@@ -410,15 +334,10 @@ char KernelFile::write(BytesCnt bytesCnt, char * buffer, File* addr){
 				file2Lvl->table[file2LvlEntry] = KernelFS::bitVectorPtr->getFirstFreeClusterNo(KernelFS::partition);//;)
 				//bitVector.useBitVector(file2Lvl.table[file2LvlEntry], KernelFS::partition);
 
-
-				//2222222222222222222222222222222222222222222222222222222222222222222222222222
 				if (fileOpenedCache.clusterNoFileData != 0) {		//znaci da je nesto bilo upisivano u njemu
 					KernelFS::partition->writeCluster(fileOpenedCache.clusterNoFileData, (char*)fileOpenedCache.fileData);
 					//delete fileOpenedCache.fileData;
 				}
-				//2222222222222222222222222222222222222222222222222222222222222222222222222222
-
-
 
 				KernelFS::partition->readCluster(file2Lvl->table[file2LvlEntry], (char*) dataBlock);
 				//cuvanje u cache-u
