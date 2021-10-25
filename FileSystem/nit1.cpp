@@ -17,11 +17,6 @@ DWORD WINAPI nit1run(){
 		File *f=FS::open(filepath,'w');
 		wait(mutex); cout<< threadName << ": Kreiran fajl '"<< filepath <<"'"<<endl; signal(mutex);
 		f->write(ulazSize,ulazBuffer);
-		/////////////////////////////////////////
-		//f->seek(0);
-		//char* buff = new char[f->getFileSize()];
-		//f->read(f->getFileSize(), buff);
-		////////////////////////////////////////
 		wait(mutex); cout<< threadName << ": Prepisan sadrzaj 'ulaz.dat' u '" << filepath << "'"<<endl; signal(mutex);
 		delete f;
 		wait(mutex); cout<< threadName << ": zatvoren fajl '" << filepath << "'"<<endl; signal(mutex);
@@ -47,15 +42,7 @@ DWORD WINAPI nit1run(){
 			//signal(mutex);
 		}
 		BytesCnt size = dst->getFileSize();
-//		if (size != 39476) {
-//			std::cout << "nesto" << std::endl;
-//		}
-		//signal(mutex);
-		/////////////////////////////////////////
-		//dst->seek(0);
-		//char* buff = new char[dst->getFileSize()];
-		//dst->read(dst->getFileSize(), buff);
-		////////////////////////////////////////
+
 		wait(mutex); cout<< threadName << ": Prepisana druga polovina '" << filepath << "' u '" << filepath1 << "'"<<endl; signal(mutex);
 		delete dst;
 		wait(mutex); cout<< threadName << ": Zatvoren fajl '" << filepath1 << "'"<<endl; signal(mutex);
@@ -91,7 +78,6 @@ DWORD WINAPI nit1run(){
 
 	wait(mutex); cout<< threadName << ": Zavrsena!"<<endl; signal(mutex);
 	
-	///////////////////////////////////////////////////OVDE
 	signal(semMain);
 	return 0;
 }
