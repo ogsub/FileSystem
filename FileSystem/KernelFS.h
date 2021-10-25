@@ -61,13 +61,9 @@ public:
 	static HANDLE openedFilesSem;
 	static bool unmountingInProgress;
 
-	//cccccccccccccccccccccccc
 	static BitVector* bitVectorPtr;
-	//cccccccccccccccccccccccc
 
-	//3333333333333333333333
 	static Index* dir1Lvl;
-	//3333333333333333333333
 
 	static Partition* partition; //= nullptr;
 private:
