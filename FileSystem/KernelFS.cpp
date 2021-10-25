@@ -6,9 +6,8 @@
 
 Partition* KernelFS::partition = nullptr;
 BitVector* KernelFS::bitVectorPtr = new BitVector();
-//3333333333333333333333
 Index* KernelFS::dir1Lvl = new Index();
-//3333333333333333333333
+
 
 std::map<DWORD, std::vector<KernelFS::ProcesFCB>*> KernelFS::threads;
 std::vector<std::tuple<char*, File*, char>> KernelFS::openedFiles;
@@ -63,17 +62,14 @@ char KernelFS::format()
 	if (this->partition == nullptr || formatingPartition) return 0;
 	else {
 		std::unique_lock<std::mutex> lock(this->m);
-		this->formatingPartition = true;												//kako sam stavio da samo 1 nit moze da udje u 1 metodu KernelFS-a, ovo je suvisno, ali ispravi to kad budes imao projekat koji radi ovako
+		this->formatingPartition = true;												
 		//while (this->getOpenedFilesNo() > 0) myWait(this->openedFilesSem);
 		cvAllFilesClosed.wait(lock, [&]() {return this->getOpenedFilesNo() == 0; });
-		//this->partition->writeCluster(0, (const char*)&BitVector());				/////////////////////////////////////PROVERI
+		//this->partition->writeCluster(0, (const char*)&BitVector());				
 		bitVectorPtr->setAllFREE();
 		this->partition->writeCluster(0, (const char*) bitVectorPtr);
 
-		//333333333333333333
-		dir1Lvl->setZeros();
-		//333333333333333333
-		//333333333333333333this->partition->writeCluster(1, (const char*)&Index());					/////////////////////////////////////PROVERI
+		dir1Lvl->setZeros();				
 		this->partition->writeCluster(1, (const char*) this->dir1Lvl);
 		this->formatingPartition = false;
 	}
@@ -83,16 +79,13 @@ char KernelFS::format()
 FileCnt KernelFS::readRootDir() {
 	if (this->partition == nullptr)
 		return -1;
-	//Index dirIndex = Index();
-	//this->partition->readCluster(1, (char *)&dirIndex);
 	return dir1Lvl->readRootDir(this->partition);
 }
 
-char KernelFS::doesExist(char * fname, FileFamilyTree* fft) {//, int* cluserNo_, unsigned long* size_) {
+char KernelFS::doesExist(char * fname, FileFamilyTree* fft) {
 	if (this->partition == nullptr)
 		return 0;
-	//Index dirIndex = Index();
-	//this->partition->readCluster(1, (char *)&dirIndex);
+
 	if (fname[0] == '/') {
 		std::memcpy(fname, fname + 1, strlen(fname) - 1);								//jer se u doesExist prosledjuje apsolutna putanja npr. /fajl.txt a ove ostale "dublje" funkcije rade bez ovog / za root
 		fname[strlen(fname) - 1] = '\0';
@@ -129,16 +122,6 @@ File * KernelFS::open(char * fname, char mode) {
 	switch (mode) {
 	case 'r':
 	{
-		//Moramo zastititi ovaj deo od simultanog ulazenja vise tredova, da ne vide 2 treda da isti objekat nije otvorenpa posle da oba krenu da citaju sa
-		//diska, nego ako vec nije otvoren, da se onda 1 thred pomuci i potrazi ga sa diska, a 2. tred koji ce posle da udje ce ga naci kao otvoren
-		
-		//*******************wait(mutexMonitor); ///mislim da ovo ne mora, jer svaki fajl ima svoj mutex, najbolje prepisi sa kdp-a
-
-		// Prvo proverimo da nije vec otvoren da ne bismo trazili po hard disku ponovo, jer je to skupa operacija
-		
-		
-		
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		bool mustWait = false;  //promenjljiva koja govori da li ce se cekati ukoliko je neko vec otvorio za pisanje fajl
 		
 		std::vector<std::tuple<char*, File*, char>>::iterator it;
@@ -150,22 +133,16 @@ File * KernelFS::open(char * fname, char mode) {
 
 				//upisujemo ga u procesFCBVect odgovarajuceg procesa(iz threads-a)
 				
-				//---------------------------
 				if (std::get<2>(*it) == 'r') { 					//ukoliko je vec otvoren i nije otvoren za upisivanje, moze da ga otvori jos jedan proces za citanje
-					////////////////////////////////////////////////////////////////OOOO
 					FileFamilyTree* fft = new FileFamilyTree();
 					this->doesExist(fname, fft);
 					file = new File();
 					file->myImpl = new KernelFile(fft->file1LvlCluster, fft->size);
 					delete fft;
-					////////////////////////////////////////////////////////////////OOOO
 					this->pushInThreadVectors(fname, mode, file);
 					return file;
 				}
 				mustWait = true;
-				//------------------------------
-				//**************mySignal(mutexMonitor);
-				//return file;
 			}
 		}
 
@@ -177,18 +154,12 @@ File * KernelFS::open(char * fname, char mode) {
 					std::vector<std::tuple<char*, File*, char>>::iterator it;
 					for (it = openedFiles.begin(); it != openedFiles.end(); it++) {
 						if (memcmp(std::get<0>(*it), fname, strlen(std::get<0>(*it))) == 0) {
-							//File* file;		// = new File();
-							//file = std::get<1>(*it);
-							
-							//---------------------------
 							if (std::get<2>(*it) == 'r') { 					//ukoliko je vec otvoren i nije otvoren za upisivanje, moze da ga otvori jos jedan proces za citanje
-								////////////////////////////////////////////////////////////////OOOO
 								FileFamilyTree* fft = new FileFamilyTree();
 								this->doesExist(fname, fft);
 								file = new File();
 								file->myImpl = new KernelFile(fft->file1LvlCluster, fft->size);
 								delete fft;
-								////////////////////////////////////////////////////////////////OOOO
 								this->pushInThreadVectors(fname, mode, file);
 								return true;
 							}
@@ -203,43 +174,28 @@ File * KernelFS::open(char * fname, char mode) {
 						file = new File();
 						file->myImpl = new KernelFile(fft->file1LvlCluster, fft->size);
 
-						this->pushInThreadVectors(fname, mode, file);	//ovo je isto sto i ovo ispod, napravio sam funkciju za to, izbrisi kad proveris lepo
+						this->pushInThreadVectors(fname, mode, file);	
 
 						//ubacimo ga u vektor otvorenih fajlova
-						openedFiles.emplace_back(fname, file, mode); /////////(std::pair<char*, File*>(fname, file));
+						openedFiles.emplace_back(fname, file, mode); 
 
 						delete fft;
 						return true;
 					}
-					//else {
-					//	delete fft;
-					//	return false;
-					//}
 					
-					//this->pushInThreadVectors(fname, mode, file);
-					//return true;
 				});
 		}
 		if (mustWait) {		//ako je ovo tacno, znaci da su sigurno obavili posao u ovoj lambdi gore
 			return file;
 		}
-		//********************
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
+		
 		//Ako ne postoji u otvorenim, moramo traziti u hard disku
 		FileFamilyTree* fft = new FileFamilyTree();
 		if (this->doesExist(fname, fft)) { //&clusterNo, &size)) {
 			File* file = new File();
 			file->myImpl = new KernelFile(fft->file1LvlCluster, fft->size);
-			//std::cout << "***********" << fft->size << "***********" << std:: endl;
-			//66666666666666666666666666
-			//this->doesExist(fname, fft);
-			//66666666666666666666666666
-
-
-			this->pushInThreadVectors(fname, mode, file);	//ovo je isto sto i ovo ispod, napravio sam funkciju za to, izbrisi kad proveris lepo
+			
+			this->pushInThreadVectors(fname, mode, file);	
 
 			//ubacimo ga u vektor otvorenih fajlova
 			openedFiles.emplace_back(fname, file, mode); /////////(std::pair<char*, File*>(fname, file));
@@ -256,14 +212,9 @@ File * KernelFS::open(char * fname, char mode) {
 	break;
 	case 'w':
 	{
-		//***************************************wait(mutexMonitor);
 		// Prvo proverimo da nije vec otvoren da ne bismo trazili po hard disku odmah jer je to skupa operacija,
 		//pa prvo ovde vidimo da nije vec otvoren, jer ako je otvoren, znaci da sigurno postoji, pa onda ne moramo da trazimo po disku.
 		//ako ga ne nadjemo ovde, moramo da proverimo da ne postoji na disku fajl takvog naziva i da ga obrisemo.
-
-
-
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 		bool fileExist = false;
 		
@@ -271,12 +222,6 @@ File * KernelFS::open(char * fname, char mode) {
 		for (it = openedFiles.begin(); it != openedFiles.end(); it++) {
 			if (memcmp(std::get<0>(*it), fname, strlen(fname)) == 0) {
 				fileExist = true;
-
-				
-				//*********************************************************************************************************
-				//OVDE BI TREBALO ODRADITI NEKU SINHRONIZACIJU DA SE CEKA AKO JE DATI FAJL KOJI SE BRISE OTVOREN
-
-				//*********************************************************************************************************
 				break;
 			}
 		}
@@ -292,7 +237,6 @@ File * KernelFS::open(char * fname, char mode) {
 					return true;				//ako vise nije medju otvorenima, mozemo da nastavimo dalje i da ga obrisemo ukoliko je samo na disku
 				});
 		}
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
 
 
 
@@ -305,12 +249,7 @@ File * KernelFS::open(char * fname, char mode) {
 		////////////////////
 
 		File* file = new File();										//fajl koji cemo vratiti kad ga napravimo (ukoliko se nesto ne izjalovi pa moramo da vratimo nullptr)
-		//file->myImpl = new KernelFile(fft->file1LvlCluster, fft->size);
-
-		//BitVector* bitVector = new BitVector();
-		//partition->readCluster(0, (char*) bitVector);		vec imamo bitVectorPtr koji je lokalna verzija toga
-		//3333333333333333333Index* dir1Lvl = new Index();
-		//3333333333333333333partition->readCluster(1, (char*) dir1Lvl);
+		
 
 
 		int dir1LvlLastEntry = dir1Lvl->getLastEntryNo();
@@ -338,7 +277,6 @@ File * KernelFS::open(char * fname, char mode) {
 
 			//dodaj u Vector otvorenih fajlova i u vektor otvorenih fajlova ove niti
 
-			//ooothis->partition->writeCluster(1, (char*) dir1Lvl);
 			this->partition->writeCluster(freeClusterNo, (char*) dir2Lvl);
 			this->partition->writeCluster(freeClusterNo2, (char*) dirData);
 			this->partition->writeCluster(file1LvlClusterNo, (char*) file1Lvl);
@@ -357,8 +295,6 @@ File * KernelFS::open(char * fname, char mode) {
 			if (dirDataLastEntry == 63) {													//to znaci da je data puna, i da moramo da proverimo da li je naredni ulaz u indexu drugog levela particije slobodan. Nismo to ranije proveravali u dir2Lvl i dir1Lvl jer je mozda slobodno u dirData i dir2Lvl respektivno
 				if (dir2LvlLastEntry == 511) {												//to znaci da je ovo bio poslednji ulaz u dir2Lvl i da je pun, znaci moramo u dir1Lvl i novi dir2Lvl da zauzmemo
 					if (dir1LvlLastEntry + 1 == 511) {
-						//delete bitVector;
-						//3333333333333333333delete dir1Lvl;
 						delete dir2Lvl;
 						return nullptr;
 					}
@@ -382,7 +318,6 @@ File * KernelFS::open(char * fname, char mode) {
 					this->pushInThreadVectors(fname, mode, file);
 					openedFiles.emplace_back(fname, file, mode);
 
-					//ooothis->partition->writeCluster(1, (char*) dir1Lvl);
 					this->partition->writeCluster(dir1Lvl->table[dir1LvlLastEntry], (char*) dir2Lvl);
 					this->partition->writeCluster(dir2Lvl->table[dir2LvlLastEntry], (char*) dirData);
 					this->partition->writeCluster(file1LvlClusterNo, (char*) file1Lvl);
@@ -432,33 +367,18 @@ File * KernelFS::open(char * fname, char mode) {
 			delete dir2Lvl;
 			delete dirData;
 		}
-		//ooothis->partition->writeCluster(0, (char*) bitVectorPtr);
-		//delete bitVector;
-		//3333333333333333333delete dir1Lvl;
+		
 		return file;
 	}
 	break;
 	case 'a':
-	{
-		///////////////////////////////////////
-
-		//Moramo zastititi ovaj deo od simultanog ulazenja vise tredova, da ne vide 2 treda da isti objekat nije otvorenpa posle da oba krenu da citaju sa
-		//diska, nego ako vec nije otvoren, da se onda 1 thred pomuci i potrazi ga sa diska, a 2. tred koji ce posle da udje ce ga naci kao otvoren
-		//myWait(mutexMonitor); ///mislim da ovo ne mora, jer svaki fajl ima svoj mutex, najbolje prepisi sa kdp-a
-		
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	{		
 		bool fileExist = false;
 
 		std::vector<std::tuple<char*, File*, char>>::iterator it;
 		for (it = openedFiles.begin(); it != openedFiles.end(); it++) {
 			if (memcmp(std::get<0>(*it), fname, strlen(fname)) == 0) {
 				fileExist = true;
-
-
-				//*********************************************************************************************************
-				//OVDE BI TREBALO ODRADITI NEKU SINHRONIZACIJU DA SE CEKA AKO JE DATI FAJL KOJI SE BRISE OTVOREN
-
-				//*********************************************************************************************************
 				break;
 			}
 		}
@@ -476,20 +396,16 @@ File * KernelFS::open(char * fname, char mode) {
 		}
 
 
-
-		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 		//Ako ne postoji u otvorenim, moramo traziti u hard disku
 		FileFamilyTree* fft = new FileFamilyTree();
-		if (this->doesExist(fname, fft)) { //&clusterNo, &size)) {
+		if (this->doesExist(fname, fft)) { 
 			File* file = new File();
 			file->myImpl = new KernelFile(fft->file1LvlCluster, fft->size);
 
-			this->pushInThreadVectors(fname, mode, file, fft->size);//file->getFileSize());	//ovo je isto sto i ovo ispod, napravio sam funkciju za to, izbrisi kad proveris lepo
+			this->pushInThreadVectors(fname, mode, file, fft->size);
 
 			//ubacimo ga u vektor otvorenih fajlova
-			openedFiles.emplace_back(fname, file, mode); /////////(std::pair<char*, File*>(fname, file));
-			//******************signal(mutexMonitor);
+			openedFiles.emplace_back(fname, file, mode); 
 
 			delete fft;
 			return file;
@@ -565,8 +481,6 @@ char KernelFS::deleteFile(char* fname, FileFamilyTree* fft) {
 		}
 
 		//ovo gore je update indexa 2. nivoa direktorijuma, sada ide update 1. nivoa, on se oslobadja ukoliko se oslobodio ceo ovaj gore klaster
-		//3333333333333333333Index dir1Lvl = Index();
-		//3333333333333333333this->partition->readCluster(1, (char*)& dir1Lvl);
 		if (lastUsedEntry2 == 0) {											//ako se oslobodio ceo klaster 2. nivoa, ulaz u prvom nivou koji je "pokazivao" na njega mora da se stavi na 0 i da se klaster defragmentuje
 			int lastUsedEntry3 = dir1Lvl->getLastEntryNo();
 			int fileEntry3 = dir1Lvl->findEntry(fft->dirDataCluster);
@@ -576,10 +490,8 @@ char KernelFS::deleteFile(char* fname, FileFamilyTree* fft) {
 		}
 
 		//posto sam citao sve ove klastere koje sam menjao, sada treba da ih vratim u hard disk, da bi podaci bili konzistentni
-		//ooothis->partition->writeCluster(1, (char*) dir1Lvl);
 		this->partition->writeCluster(fft->dir2LvlCluster, (char*)& dir2Lvl);
 		this->partition->writeCluster(fft->dirDataCluster, (char*)& dirData);
-		//ooothis->partition->writeCluster(0, (char*) bitVectorPtr);
 		
 		//sad treba da obrisem fajlove iz vektora procesa, i potencijalno iz vektora otvorenih fajlova
 		unsigned long threadId = GetCurrentThreadId();
