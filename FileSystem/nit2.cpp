@@ -112,8 +112,7 @@ DWORD WINAPI nit2run(){
 		delete f;
 		wait(mutex); cout << threadName << ": Zatvoren fajl " << filepath << "" << endl; signal(mutex);
 	}
-	
-	///////////////////////////////////////////////////OVDE
+
 	{
 		FS::unmount();
 		wait(mutex); cout << threadName << ": Demontirana particija p1" << endl; signal(mutex);
