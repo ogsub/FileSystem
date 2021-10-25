@@ -4,7 +4,6 @@ File::File() {
 }
 
 File::~File() {										//ne zaboravi da signaliziras openedFileSem u KernelFS 
-	//std::unique_lock<std::mutex> lock(this->myImpl->m);
 	myWait(this->myImpl->mutexRW);
 	this->myImpl->setFileToCloseAddr(this);
 	delete myImpl;
@@ -12,25 +11,18 @@ File::~File() {										//ne zaboravi da signaliziras openedFileSem u KernelFS
 }
 
 char File::write(BytesCnt bytesCnt, char * buffer) {
-	//std::unique_lock<std::mutex> lock(this->myImpl->m);
 	myWait(myImpl->mutexRW);
 	char ret =  this->myImpl->write(bytesCnt, buffer, this);
 	mySignal(myImpl->mutexRW);
-	//lock.unlock();
 	return ret;
 }
 
 BytesCnt File::read(BytesCnt byteNo, char * buffer) {
-	//std::unique_lock<std::mutex> lock(this->myImpl->m);
-	//myWait(myImpl->mutexRW);
 	BytesCnt ret = this->myImpl->read(byteNo, buffer, this);
-	//mySignal(myImpl->mutexRW);
-	//lock.unlock();
 	return ret;
 }
 
 char File::seek(BytesCnt byteNo) {
-	//std::unique_lock<std::mutex> lock(this->myImpl->m);
 	myWait(myImpl->mutexRW);
 	char ret = this->myImpl->seek(byteNo, this);
 	mySignal(myImpl->mutexRW);
@@ -43,10 +35,7 @@ BytesCnt File::filePos() {
 }
 
 char File::eof() {
-	//std::unique_lock<std::mutex> lock(this->myImpl->m);
-	//myWait(myImpl->mutexRW);
 	char ret =  this->myImpl->eof(this);
-	//mySignal(myImpl->mutexRW);
 	return ret;
 }
 
