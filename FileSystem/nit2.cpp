@@ -65,7 +65,6 @@ DWORD WINAPI nit2run(){
 		delete f;
 		wait(mutex); cout<< threadName << ": Zatvoren fajl " << filepath << ""<<endl; signal(mutex);
 	}
-	///////////////////////////////////////////////////OVDE
 	
 	{
 		char copied_filepath[] = "/fajll5.dat";
