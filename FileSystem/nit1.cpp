@@ -52,7 +52,6 @@ DWORD WINAPI nit1run(){
 	signal(sem12); // signalizira niti 2
 	wait(mutex); cout<< threadName << ": wait 2"<<endl; signal(mutex);
 	wait(sem21);//ceka nit1
-	///////////////////////////////////////////////////OVDE
 	
 
 	{
